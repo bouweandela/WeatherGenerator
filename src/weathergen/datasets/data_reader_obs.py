@@ -9,6 +9,7 @@
 
 import datetime
 import logging
+import os
 from pathlib import Path
 from typing import override
 
@@ -20,6 +21,7 @@ from weathergen.datasets.data_reader_base import (
     ReaderData,
     TimeWindowHandler,
     check_reader_data,
+    is_remote_path,
 )
 from weathergen.train.utils import Stage
 
@@ -28,14 +30,12 @@ _logger = logging.getLogger(__name__)
 
 class DataReaderObs(DataReaderBase):
     def __init__(
-        self, tw_handler: TimeWindowHandler, filename: Path, stream_info: dict, stage: Stage
+        self, tw_handler: TimeWindowHandler, filename: Path | str, stream_info: dict, stage: Stage
     ) -> None:
         super().__init__(tw_handler, stream_info)
 
         self.filename = filename
-        self.z = zarr.open(filename, mode="r")
-        self.data = self.z["data"]
-        self.dt = self.z["dates"]  # datetime only
+        self._open_store()
         base_dt_raw = stream_info.get("base_datetime", "1970-01-01T00:00:00")
         format_str = "%Y-%m-%dT%H:%M:%S"
 
@@ -212,6 +212,21 @@ class DataReaderObs(DataReaderBase):
         # truncate the last sample so that it doesn't go beyond the requested dataset end date
         self.indices_end = np.minimum(self.indices_end, self.hrly_index[end_range_1])
 
+    def _open_store(self) -> None:
+        """Open the zarr store and the arrays read per sample."""
+        self.z = zarr.open(self.filename, mode="r")
+        self.data = self.z["data"]
+        self.dt = self.z["dates"]  # datetime only
+        self._store_pid = os.getpid()
+
+    def _reopen_store_after_fork(self) -> None:
+        """
+        Reopen a remote store in a forked data loader worker: the HTTP session inherited from
+        the parent process cannot be used in the child.
+        """
+        if is_remote_path(self.filename) and self._store_pid != os.getpid():
+            self._open_store()
+
     def _load_properties(self) -> None:
         self.properties = {}
 
@@ -244,6 +259,8 @@ class DataReaderObs(DataReaderBase):
             return ReaderData.empty(
                 num_data_fields=len(channels_idx), num_geo_fields=len(self.geoinfo_idx)
             )
+
+        self._reopen_store_after_fork()
 
         start_row = self.indices_start[idx]
         end_row = self.indices_end[idx]
