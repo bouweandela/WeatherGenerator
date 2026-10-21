@@ -8,7 +8,7 @@
 # nor does it submit to any jurisdiction.
 
 # Inference for run mz7oyrr5 with the datasets read over HTTPS from the JSC data catalog,
-# https://esm-data.fz-juelich.de/catalog/api/v1/, see the README.
+# https://esm-data.fz-juelich.de/catalog/gui/v1/stac-browser/, see the README.
 
 data_paths: ["https://esm-data.fz-juelich.de/datasets/v1"]
 

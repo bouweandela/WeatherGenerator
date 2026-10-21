@@ -68,7 +68,7 @@ WEATHERGEN_PRIVATE_CONF=./local_config.yml uv run train --base-config ./config/e
 
 ### Inference with data from the JSC data catalog
 
-The datasets listed in the [JSC data catalog](https://esm-data.fz-juelich.de/catalog/api/v1/)
+The datasets listed in the [JSC data catalog](https://esm-data.fz-juelich.de/catalog/gui/v1/stac-browser/)
 can be read directly over HTTPS, without downloading them first. Dataset filenames are
 looked up in `data_paths`, which can contain URLs as well as local directories.
 
@@ -94,5 +94,3 @@ looked up in `data_paths`, which can contain URLs as well as local directories.
 - The Metop-B IASI dataset of run `mz7oyrr5` is not in the catalog, so it is left out.
   Choose dates covered by the other IASI datasets (Metop-A until 2021, Metop-C from
   2019-12 to 2023-05), else the IASI input is missing.
-- The model of run `mz7oyrr5` has about 1B parameters (4.2 GB in fp32), so it does not fit
-  on a GPU with 4 GB of memory.
