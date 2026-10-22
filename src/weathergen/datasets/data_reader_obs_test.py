@@ -1,8 +1,11 @@
 import os
 
+import numpy as np
 import pytest
+import zarr
 
 import weathergen.datasets.data_reader_obs as data_reader_obs
+from weathergen.datasets.data_reader_base import TimeWindowHandler
 from weathergen.datasets.data_reader_obs import DataReaderObs
 
 
@@ -52,3 +55,26 @@ def test_no_reopen_local_store_after_fork(opened_stores, tmp_path):
 
     assert len(opened_stores) == 1
     assert reader.data == "data1"
+
+
+def test_get_selects_columns():
+    t_start = np.datetime64("2023-03-01T00:00")
+    reader = DataReaderObs.__new__(DataReaderObs)
+    reader.filename = "data.zarr"
+    reader._store_pid = os.getpid()
+    reader.time_window_handler = TimeWindowHandler(
+        t_start, np.datetime64("2023-03-02T00:00"), np.timedelta64(6, "h"), np.timedelta64(6, "h")
+    )
+    # columns: lat, lon, geoinfo, channel 0, channel 1
+    values = np.arange(4 * 5, dtype=np.float32).reshape(4, 5)
+    reader.data = zarr.array(values, chunks=(2, 5))
+    reader.dt = zarr.array(np.full((4, 1), t_start + np.timedelta64(1, "h")))
+    reader.indices_start, reader.indices_end = np.array([1]), np.array([4])
+    reader.coords_idx = [0, 1]
+    reader.geoinfo_idx = [2]
+
+    rdata = reader._get(0, np.array([4, 3]))
+
+    np.testing.assert_array_equal(rdata.coords, values[1:4, [0, 1]])
+    np.testing.assert_array_equal(rdata.geoinfos, values[1:4, [2]])
+    np.testing.assert_array_equal(rdata.data, values[1:4, [4, 3]])
