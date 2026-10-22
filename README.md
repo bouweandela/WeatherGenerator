@@ -80,15 +80,15 @@ looked up in `data_paths`, which can contain URLs as well as local directories.
     shared_working_dir/models/mz7oyrr5/model_mz7oyrr5_latest.json
     ```
 2. Run inference from the root of the repository, with
-   [config/remote_inference.yml](config/remote_inference.yml) to read the data from the
+   [config/jsc_catalog_inference.yml](config/jsc_catalog_inference.yml) to read the data from the
    catalog:
     ```bash
     WEATHERGEN_PRIVATE_CONF=$(pwd)/private_config.yaml uv run inference \
-      --from-run-id mz7oyrr5 --config config/remote_inference.yml
+      --from-run-id mz7oyrr5 --config config/jsc_catalog_inference.yml
     ```
    The forecast is written to `shared_working_dir/results/<new run_id>/`.
 
-`config/remote_inference.yml` runs one sample with a single forecast step (+6h) from
+`config/jsc_catalog_inference.yml` runs one sample with a single forecast step (+6h) from
 2023-03-01. Change `test_config` for other dates or more forecast steps. Note that:
 - Downloading the data of one sample takes about 2 minutes.
 - The Metop-B IASI dataset of run `mz7oyrr5` is not in the catalog, so it is left out.
