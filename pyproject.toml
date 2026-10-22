@@ -34,6 +34,7 @@ dependencies = [
  'wheel',
  'setuptools',
  "aiohttp>=3.13.5",
+ "certifi",
 ]
 
 
@@ -50,6 +51,7 @@ inference = "weathergen.run_train:inference"
 evaluate = "weathergen.evaluate.run_evaluation:evaluate"
 plot_train = "weathergen.utils.plot_training:plot_train"
 export = "weathergen.evaluate.export.export_inference:export"
+download_datasets = "weathergen.datasets.download_datasets:download_datasets"
 
 [build-system]
 requires = ["hatchling"]
