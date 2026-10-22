@@ -128,10 +128,21 @@ def _add_general_arguments(parser: argparse.ArgumentParser):
 
 
 def _add_model_loading_params(parser: argparse.ArgumentParser):
+    _add_pretrained_model_args(parser, required=True)
+    parser.add_argument(
+        "--reuse-run-id",
+        action="store_true",
+        help="Use the id given via --from-run-id also for the current run. "
+        "The storage location for artifacts will be reused as well. "
+        "This might overwrite artifacts from previous runs.",
+    )
+
+
+def _add_pretrained_model_args(parser: argparse.ArgumentParser, required: bool):
     parser.add_argument(
         "-id",
         "--from-run-id",
-        required=True,
+        required=required,
         help=(
             "Start inference or continue training from the WeatherGenerator"
             " model with the given run id."
@@ -147,10 +158,33 @@ def _add_model_loading_params(parser: argparse.ArgumentParser):
             " (Default -1 corresponds to the last checkpoint)."
         ),
     )
-    parser.add_argument(
-        "--reuse-run-id",
-        action="store_true",
-        help="Use the id given via --from-run-id also for the current run. "
-        "The storage location for artifacts will be reused as well. "
-        "This might overwrite artifacts from previous runs.",
+
+
+def get_download_parser() -> argparse.ArgumentParser:
+    """Parser of `download_datasets`: the datasets of a run as for `inference` or `train`."""
+    parser = argparse.ArgumentParser(
+        allow_abbrev=False,
+        description="Download the remote datasets of a run to a local directory, restricted to "
+        "the dates of the run's stages, for compute nodes without internet access.",
     )
+    _add_pretrained_model_args(parser, required=False)
+    _add_general_arguments(parser)
+    parser.add_argument(
+        "--data-dir",
+        type=Path,
+        help="Directory for the local copies (default: first local directory in data_paths).",
+    )
+    parser.add_argument(
+        "--stages",
+        nargs="+",
+        choices=["training", "validation", "test"],
+        help="Stages whose dates to cover (default: test with --from-run-id, else training "
+        "and validation).",
+    )
+    parser.add_argument("--start", help="Override the start date of all stages.")
+    parser.add_argument("--end", help="Override the end date of all stages.")
+    parser.add_argument("--all", action="store_true", help="Copy the datasets completely.")
+    parser.add_argument("--transfers", type=int, default=16, help="Parallel downloads.")
+    parser.add_argument("--overwrite", action="store_true", help="Re-download existing chunks.")
+    parser.add_argument("--dry-run", action="store_true", help="Only report what would be copied.")
+    return parser

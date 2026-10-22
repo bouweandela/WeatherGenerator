@@ -94,3 +94,22 @@ looked up in `data_paths`, which can contain URLs as well as local directories.
 - The Metop-B IASI dataset of run `mz7oyrr5` is not in the catalog, so it is left out.
   Choose dates covered by the other IASI datasets (Metop-A until 2021, Metop-C from
   2019-12 to 2023-05), else the IASI input is missing.
+
+#### Compute nodes without internet access
+
+If the nodes that run inference or training cannot reach the catalog, download the data
+first on a node that can, with the same arguments as `inference` (or `train`):
+```bash
+WEATHERGEN_PRIVATE_CONF=$(pwd)/private_config.yaml uv run download_datasets \
+  --from-run-id mz7oyrr5 --config config/jsc_catalog_inference.yml --data-dir /path/to/datasets
+```
+This mirrors every dataset that resolves to a URL into `--data-dir`, restricted to the
+chunks that the readers access for the dates of the run (`test_config` for inference,
+`training_config` and `validation_config` for training; `--all` copies whole datasets,
+`--dry-run` only reports sizes). Then run with the local directory *before* the URL in
+`data_paths`, e.g. `--options 'data_paths=[/path/to/datasets, https://esm-data.fz-juelich.de/datasets/v1]'`:
+the first entry that has a dataset is used. Re-running the download resumes it.
+
+If reading from the catalog fails with `CERTIFICATE_VERIFY_FAILED` while `curl` works, the
+OpenSSL default CA bundle is outdated (macOS lacks the HARICA 2021 root). Point Python at
+certifi's bundle: `export SSL_CERT_FILE=$(uv run python -c 'import certifi; print(certifi.where())')`.
