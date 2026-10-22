@@ -45,6 +45,7 @@ import numpy as np
 import pandas as pd
 import zarr
 import zarr.api.asynchronous as zarr_async
+from omegaconf import OmegaConf
 from zarr.abc.store import Store
 from zarr.core.array import AsyncArray
 from zarr.core.buffer import Buffer, default_buffer_prototype
@@ -432,6 +433,8 @@ def main(argl: list[str]) -> list[RemoteDataset]:
     cf = config.load_merge_configs(
         args.from_run_id, args.mini_epoch, args.base_config, *args.config, cli_overwrite
     )
+    if OmegaConf.is_missing(cf, "streams"):  # a new run: streams come from the directory
+        cf.streams = config.load_streams(Path(cf.streams_directory))
     stages = args.stages or (["test"] if args.from_run_id else ["training", "validation"])
     windows = stage_windows(cf, stages)
     if args.start or args.end:
@@ -447,6 +450,8 @@ def main(argl: list[str]) -> list[RemoteDataset]:
             )
             for stage, tw in windows
         ]
+        for stage, tw in windows:
+            _logger.info(f"{stage} with --start/--end: {tw}")
 
     data_paths = cf.get("data_paths", [])
     data_dir = args.data_dir
