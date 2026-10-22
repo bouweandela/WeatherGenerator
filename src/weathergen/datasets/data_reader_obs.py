@@ -265,14 +265,14 @@ class DataReaderObs(DataReaderBase):
         start_row = self.indices_start[idx]
         end_row = self.indices_end[idx]
 
-        coords = self.data.oindex[start_row:end_row, self.coords_idx]
-        geoinfos = (
-            self.data.oindex[start_row:end_row, self.geoinfo_idx]
-            if len(self.geoinfo_idx) > 0
-            else np.zeros((coords.shape[0], 0), np.float32)
-        )
-
-        data = self.data.oindex[start_row:end_row, channels_idx]
+        # read all columns at once: they are in the same chunks, which are otherwise read
+        # (and for remote stores downloaded) once per selection
+        n_coords, n_geoinfos = len(self.coords_idx), len(self.geoinfo_idx)
+        columns = np.concatenate([self.coords_idx, self.geoinfo_idx, channels_idx])
+        rows = self.data.oindex[start_row:end_row, columns.astype(np.int64)]
+        coords = rows[:, :n_coords]
+        geoinfos = rows[:, n_coords : n_coords + n_geoinfos]
+        data = rows[:, n_coords + n_geoinfos :]
         datetimes = self.dt[start_row:end_row][:, 0]
 
         # indices_start, indices_end above work with [t_start, t_end] and violate
