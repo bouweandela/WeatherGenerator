@@ -7,7 +7,7 @@
 # granted to it by virtue of its status as an intergovernmental organisation
 # nor does it submit to any jurisdiction.
 
-# Inference for run mz7oyrr5 with the datasets read over HTTPS from the JSC data catalog,
+# Read the datasets over HTTPS from the JSC data catalog,
 # https://esm-data.fz-juelich.de/catalog/gui/v1/stac-browser/, see the README.
 
 data_paths: ["https://esm-data.fz-juelich.de/datasets/v1"]
@@ -18,18 +18,3 @@ streams:
     filenames:
       - observations-ea-ofb-0001-2007-2021-metop-a-iasi-radiances-v1.zarr
       - observations-ea-ofb-0001-2019-2023-metop-c-iasi-radiances-v1.zarr
-
-data_loading:
-  # each worker downloads the data for its samples
-  num_workers_validation: 1
-
-# One sample with one forecast step (+6h). The period is covered by all available datasets:
-# Metop-C IASI ends on 2023-05-31 and Metop-A IASI in 2021.
-test_config:
-  samples_per_mini_epoch: 1
-  start_date: "2023-03-01T00:00"
-  end_date: "2023-03-02T00:00"
-  forecast:
-    num_steps: 1
-  output:
-    num_samples: 1
