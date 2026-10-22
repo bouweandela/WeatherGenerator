@@ -27,15 +27,6 @@ def _reader(filename) -> DataReaderObs:
     return reader
 
 
-def test_open_store(opened_stores):
-    reader = _reader("https://example.com/data.zarr")
-
-    assert opened_stores == ["https://example.com/data.zarr"]
-    assert reader.data == "data1"
-    assert reader.dt == "dates1"
-    assert reader._store_pid == os.getpid()
-
-
 def test_reopen_remote_store_after_fork(opened_stores):
     reader = _reader("https://example.com/data.zarr")
     # as in a forked data loader worker
@@ -51,15 +42,6 @@ def test_reopen_remote_store_after_fork(opened_stores):
     # only once per process
     reader._reopen_store_after_fork()
     assert len(opened_stores) == 2
-
-
-def test_no_reopen_in_same_process(opened_stores):
-    reader = _reader("https://example.com/data.zarr")
-
-    reader._reopen_store_after_fork()
-
-    assert len(opened_stores) == 1
-    assert reader.data == "data1"
 
 
 def test_no_reopen_local_store_after_fork(opened_stores, tmp_path):

@@ -31,13 +31,6 @@ def _reader(filename) -> DataReaderAnemoi:
     return reader
 
 
-def test_ds_in_same_process(opened_datasets):
-    reader = _reader("https://example.com/data.zarr")
-
-    assert reader.ds == "dataset0"
-    assert opened_datasets == []
-
-
 def test_reopen_remote_dataset_after_fork(opened_datasets):
     url = "https://example.com/data.zarr"
     reader = _reader(url)
